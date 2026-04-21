@@ -1,20 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Menú Biodigestores</title>
+    <meta charset="UTF-8">
+    <title>Gestión Planta Biodigestores AMSA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial; text-align: center; padding: 20px; background: #f4f7f6; }
-        .boton { 
-            display: block; width: 100%; padding: 20px; margin: 10px 0; 
-            background: #27ae60; color: white; text-decoration: none; 
-            border-radius: 10px; font-weight: bold; font-size: 18px;
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            background: #f0f4f3; 
+            color: #2c3e50;
         }
+        h1 { margin-bottom: 30px; color: #1a5c2e; font-size: 24px; }
+        .contenedor-botones { max-width: 400px; margin: 0 auto; }
+        .boton { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            width: 100%; 
+            padding: 25px 15px; 
+            margin: 15px 0; 
+            background: #ffffff; 
+            color: #1a5c2e; 
+            text-decoration: none; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            font-size: 18px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 2px solid #27ae60;
+            transition: transform 0.2s;
+        }
+        .boton:active { transform: scale(0.98); background: #e8f5e9; }
+        .icono { font-size: 24px; margin-right: 15px; }
     </style>
 </head>
 <body>
     <h1>Gestión Planta</h1>
-    <a href="diario.html" class="boton">📝 Registro Diario (Química)</a>
-    <a href="cargas.html" class="boton">🚜 Cargas a Biodigestores</a>
+    
+    <div class="contenedor-botones">
+        <a href="diario.html" class="boton">
+            <span class="icono">📝</span> 
+            <span>Registro Diario</span>
+        </a>
+
+        <a href="cargas.html" class="boton">
+            <span class="icono">⚙️</span> 
+            <span>Cargas a Biodigestores</span>
+        </a>
+    </div>
+
+    <p style="margin-top: 40px; font-size: 12px; color: #7f8c8d;">
+        Alimentos Magros S.A. | v3.0
+    </p>
 </body>
 </html>
