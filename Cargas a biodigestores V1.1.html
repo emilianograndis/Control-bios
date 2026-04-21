@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargas Alimentos Magros</title>
+    <style>
+        :root { --primary: #1b5e20; --success: #2e7d32; --error: #d32f2f; --bg: #f4f4f4; --mucanga-bg: rgba(121, 85, 72, 0.1); --suero-bg: rgba(52, 152, 219, 0.1); --trasbase-bg: #fff3e0; --trasbase-text: #e65100; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 5px; }
+        .header-main { background: var(--primary); color: white; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 8px; }
+        .header-main h1 { margin: 0; font-size: 0.95rem; text-transform: uppercase; }
+        .tabs-container { display: flex; gap: 5px; overflow-x: auto; padding: 5px 0; margin-bottom: 5px; }
+        .tab-btn { padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; background: white; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #666; flex-shrink: 0; }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-update { width: 100%; padding: 12px; background: #ffffff; color: var(--primary); border: 2px solid var(--primary); border-radius: 6px; font-weight: bold; cursor: pointer; display: block; font-size: 0.85rem; margin-bottom: 10px;}
+        .historial-area { background: #e0e0e0; border-radius: 6px; padding: 6px; margin-bottom: 10px; border: 1px solid #ccc; }
+        .historial-title { font-size: 0.65rem; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #bbb; }
+        .item-historial { font-size: 0.7rem; padding: 6px 0; border-bottom: 1px solid #dcdcdc; line-height: 1.3; }
+        .item-historial b { color: #1b5e20; }
+        .card { background: white; border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .bio-group { border: 1px solid #ccc; border-radius: 6px; padding: 8px; margin-bottom: 10px; background: #fff; }
+        .bio-title { font-size: 0.7rem; font-weight: bold; color: var(--primary); margin-bottom: 6px; border-bottom: 1px solid #eee; }
+        .fila-input { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 4px; padding: 6px; border-radius: 4px; border: 1px solid #eee; }
+        .bg-mucanga { background-color: var(--mucanga-bg); }
+        .bg-suero { background-color: var(--suero-bg); }
+        .obj-box { font-size: 0.75rem; border-right: 1px solid #ddd; line-height: 1.2; }
+        .obj-box span { font-size: 0.6rem; color: #555; font-weight: bold; }
+        .obj-val { font-size: 0.9rem; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1.5px solid #ccc; border-radius: 4px; font-size: 0.95rem; text-align: center; font-weight: bold; box-sizing: border-box; }
+        .match { background-color: #c8e6c9 !important; border-color: var(--success) !important; }
+        .mismatch { background-color: #ffcdd2 !important; border-color: var(--error) !important; }
+        .st-container { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 6px; border: 1px solid #ccc; }
+        .btn-enviar { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header-main"><h1>Cargas Diarias Biogás</h1></div>
+    <div class="historial-area"><div class="historial-title">Cargas completadas hoy:</div><div id="listaHistorial"></div></div>
+    <button type="button" class="btn-update" id="btnLeer" onclick="consultarPlan()">🔄 ACTUALIZAR PLANILLA</button>
+    <div id="tabsTareas" class="tabs-container"></div>
+    <div id="contenedorActivo"></div>
+
+<script>
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwAW3JbN582U8gqnDq9sXuL5IZ6MqSjwPsaZSYOApK2Pohi-c7G3RMpPoB9JSq55AfJ/exec"; 
+    let pendientesGlobal = [];
+    let indiceSeleccionado = 0;
+
+    function limpiarHora(s) { return s ? s.toString().includes("T") ? s.split("T")[1].substring(0, 5) : s.substring(0, 5) : "--:--"; }
+
+    async function consultarPlan() {
+        try {
+            const res = await fetch(URL_SCRIPT);
+            const cargas = await res.json();
+            document.getElementById('listaHistorial').innerHTML = "";
+            document.getElementById('tabsTareas').innerHTML = "";
+            document.getElementById('contenedorActivo').innerHTML = "";
+            
+            pendientesGlobal = cargas.filter(c => c.estado === "Pendiente");
+            
+            // Render historial detallado
+            cargas.filter(c => c.estado === "Completado").forEach(c => {
+                let detalle = "";
+                if(c.id.toUpperCase().includes("TRASBASE")) {
+                    detalle = `Trasbase D1: ${c.t12}m³ | D2: ${c.t2L}m³`;
+                } else {
+                    detalle = `B1: ${c.b1_m_real}m/ ${c.b1_s_real}s | B2: ${c.b2_m_real}m/ ${c.b2_s_real}s | ST: ${c.st}%`;
+                }
+                document.getElementById('listaHistorial').innerHTML += `
+                    <div class="item-historial">
+                        ✅ <b>${c.id} (${limpiarHora(c.hora)}hs)</b><br>
+                        <span style="color:#666">${detalle}</span>
+                    </div>`;
+            });
+
+            if (pendientesGlobal.length > 0) {
+                pendientesGlobal.forEach((c, index) => {
+                    const btnTab = document.createElement('button');
+                    btnTab.className = `tab-btn ${index === 0 ? 'active' : ''}`;
+                    btnTab.innerText = `${c.id} (${limpiarHora(c.hora)})`;
+                    btnTab.onclick = () => seleccionarTarea(index);
+                    document.getElementById('tabsTareas').appendChild(btnTab);
+                });
+                renderActiva(0);
+            } else {
+                document.getElementById('contenedorActivo').innerHTML = "<p style='text-align:center; padding:20px;'>Sin tareas pendientes.</p>";
+            }
+        } catch (e) { alert("Error al cargar datos."); }
+    }
+
+    function seleccionarTarea(index) {
+        indiceSeleccionado = index;
+        document.querySelectorAll('.tab-btn').forEach((b, i) => i === index ? b.classList.add('active') : b.classList.remove('active'));
+        renderActiva(index);
+    }
+
+    function evaluarColor(input, obj) {
+        if (input.value === "") { input.classList.remove('match', 'mismatch'); return; }
+        if (parseFloat(input.value) === parseFloat(obj)) { input.classList.add('match'); input.classList.remove('mismatch'); } 
+        else { input.classList.add('mismatch'); input.classList.remove('match'); }
+    }
+
+    function renderActiva(index) {
+        const c = pendientesGlobal[index];
+        const isT = c.id.toUpperCase().includes("TRASBASE");
+        let html = `<div class="card">
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:10px;">
+                <span>${c.id}</span><span>🕒 ${limpiarHora(c.hora)} hs</span>
+            </div>`;
+
+        if (isT) {
+            html += `<div class="bio-group"><div class="bio-title">TRASBASE</div><p>D1 a D2: <b>${c.t12}m³</b></p><p>D2 a Laguna: <b>${c.t2L}m³</b></p></div>`;
+        } else {
+            html += `
+                <div class="bio-group">
+                    <div class="bio-title">BIODIGESTOR 1</div>
+                    <div class="fila-input bg-mucanga"><div class="obj-box"><span>MUCA</span><div class="obj-val">${c.b1_m_obj}</div></div><input type="number" id="r1m" oninput="evaluarColor(this, ${c.b1_m_obj})" placeholder="REAL"></div>
+                    <div class="fila-input bg-suero"><div class="obj-box"><span>SUE</span><div class="obj-val">${c.b1_s_obj}</div></div><input type="number" id="r1s" oninput="evaluarColor(this, ${c.b1_s_obj})" placeholder="REAL"></div>
+                </div>
+                <div class="bio-group">
+                    <div class="bio-title">BIODIGESTOR 2</div>
+                    <div class="fila-input bg-mucanga"><div class="obj-box"><span>MUCA</span><div class="obj-val">${c.b2_m_obj}</div></div><input type="number" id="r2m" oninput="evaluarColor(this, ${c.b2_m_obj})" placeholder="REAL"></div>
+                    <div class="fila-input bg-suero"><div class="obj-box"><span>SUE</span><div class="obj-val">${c.b2_s_obj}</div></div><input type="number" id="r2s" oninput="evaluarColor(this, ${c.b2_s_obj})" placeholder="REAL"></div>
+                </div>
+                <div class="st-container">
+                    <select id="stValue"><option value="">-- Seleccionar %ST --</option>
+                        <option value="5">5%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="25">25%</option><option value="30">30%</option><option value="35">35%</option><option value="40">40%</option>
+                    </select>
+                </div>`;
+        }
+        html += `<button class="btn-enviar" onclick="enviar()">CONFIRMAR</button></div>`;
+        document.getElementById('contenedorActivo').innerHTML = html;
+    }
+
+    async function enviar() {
+        if (indiceSeleccionado > 0) {
+            const anterior = pendientesGlobal[indiceSeleccionado - 1];
+            if (!confirm(`⚠️ AVISO: Hay una carga anterior pendiente (${anterior.id}). ¿Confirmar esta de todos modos?`)) return;
+        }
+
+        const c = pendientesGlobal[indiceSeleccionado];
+        const isT = c.id.toUpperCase().includes("TRASBASE");
+        let data = { tipoAccion: "REGISTRO_CARGA", bache: c.id };
+
+        if (!isT) {
+            const r1m = document.getElementById('r1m').value;
+            const r1s = document.getElementById('r1s').value;
+            const r2m = document.getElementById('r2m').value;
+            const r2s = document.getElementById('r2s').value;
+            const st = document.getElementById('stValue').value;
+            if (!r1m || !r1s || !r2m || !r2s || !st) { alert("❌ Completa todo"); return; }
+            data.r1m = r1m; data.r1s = r1s; data.r2m = r2m; data.r2s = r2s; data.st = st;
+        }
+
+        if (!confirm("¿Confirmar?")) return;
+        document.querySelector('.btn-enviar').innerText = "ENVIANDO...";
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+        alert("✅ Guardado");
+        consultarPlan();
+    }
+    window.onload = consultarPlan;
+</script>
+</body>
+</html>

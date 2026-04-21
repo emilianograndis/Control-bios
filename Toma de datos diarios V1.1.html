@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Planta - Alimentos Magros</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #2980b9; --bg: #ffffff; }
+        body { font-family: -apple-system, sans-serif; background-color: #ccc; padding: 5px; margin: 0; }
+        .container { max-width: 480px; margin: auto; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); margin-bottom: 8px; padding-bottom: 2px; }
+        #liveClock { font-weight: bold; color: var(--accent); font-size: 0.85rem; }
+        h2 { font-size: 0.95rem; margin: 0; color: var(--primary); text-transform: uppercase; }
+        .section-title { background: var(--primary); color: white; padding: 3px 8px; font-size: 0.75rem; border-radius: 4px; margin: 8px 0 4px 0; font-weight: bold; text-align: center; }
+        .grid-bios { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .bio-card { border: 1px solid #bbb; padding: 6px; border-radius: 6px; background: #fdfdfd; }
+        .bio-card h3 { margin: 0 0 5px 0; font-size: 0.85rem; text-align: center; color: var(--accent); border-bottom: 1px solid #eee; }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-size: 0.65rem; font-weight: bold; color: #555; margin-bottom: 1px; }
+        input, select, textarea { width: 100%; padding: 6px; border: 1px solid #aaa; border-radius: 3px; font-size: 0.9rem; box-sizing: border-box; background: #fff; }
+        textarea { resize: none; font-family: inherit; }
+        .res-auto { margin-top: 5px; padding: 5px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #ccc; line-height: 1.3; background: #eee; min-height: 32px; }
+        .estable { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .alerta { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .general-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f0f4f7; padding: 8px; border-radius: 5px; border: 1px solid #d1d8dd; }
+        .full-width { grid-column: span 2; }
+        button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        button:disabled { background: #95a5a6; }
+    </style>
+</head>
+<body onload="startTime()">
+
+<div class="container">
+    <div class="header">
+        <h2>ALIMENTOS MAGROS S.A.</h2>
+        <div id="liveClock"></div>
+    </div>
+
+    <div class="section-title">ESTADO DE BIODIGESTORES</div>
+    <div class="grid-bios">
+        <div class="bio-card">
+            <h3>BIO 1</h3>
+            <div class="input-row">
+                <div class="input-group"><label>Temp °C</label><input type="number" id="t1" step="0.1"></div>
+                <div class="input-group"><label>pH</label><input type="number" id="ph1" step="0.1"></div>
+            </div>
+            <div class="input-row">
+                <div class="input-group"><label>Nivel (m)</label><input type="number" id="n1" step="0.01"></div>
+                <div class="input-group"><label>Espuma</label>
+                    <select id="e1"><option>Nada</option><option>Baja</option><option>Alta</option></select>
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="input-group"><label>V5 (TAC)</label><input type="number" id="v1_1" oninput="calc(1)"></div>
+                <div class="input-group"><label>V4.4 (FOS)</label><input type="number" id="v2_1" oninput="calc(1)"></div>
+            </div>
+            <div id="res1" class="res-auto">FOS: -- | TAC: --<br><b>Ratio: --</b></div>
+        </div>
+
+        <div class="bio-card">
+            <h3>BIO 2</h3>
+            <div class="input-row">
+                <div class="input-group"><label>Temp °C</label><input type="number" id="t2" step="0.1"></div>
+                <div class="input-group"><label>pH</label><input type="number" id="ph2" step="0.1"></div>
+            </div>
+            <div class="input-row">
+                <div class="input-group"><label>Nivel (m)</label><input type="number" id="n2" step="0.01"></div>
+                <div class="input-group"><label>Espuma</label>
+                    <select id="e2"><option>Nada</option><option>Baja</option><option>Alta</option></select>
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="input-group"><label>V5 (TAC)</label><input type="number" id="v1_2" oninput="calc(2)"></div>
+                <div class="input-group"><label>V4.4 (FOS)</label><input type="number" id="v2_2" oninput="calc(2)"></div>
+            </div>
+            <div id="res2" class="res-auto">FOS: -- | TAC: --<br><b>Ratio: --</b></div>
+        </div>
+    </div>
+
+    <div class="section-title">GENERAL, MOTOR & OBS</div>
+    <div class="general-box">
+        <div class="input-group">
+            <label>Nivel Hidro (m)</label>
+            <input type="number" id="nHidro" step="0.01">
+        </div>
+        <div class="input-group">
+            <label>kWh (Motor)</label>
+            <input type="number" id="kwh">
+        </div>
+        <div class="input-group full-width">
+            <label>Observaciones del turno</label>
+            <textarea id="obs" rows="3" placeholder="Comentarios..."></textarea>
+        </div>
+    </div>
+
+    <button id="btnEnviar" onclick="validarYEnviar()">ENVIAR DATOS</button>
+</div>
+
+<script>
+function startTime() {
+    const now = new Date();
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    document.getElementById('liveClock').innerHTML = now.toLocaleDateString('es-AR', options);
+    setTimeout(startTime, 30000);
+}
+
+function calc(num) {
+    const v5 = parseFloat(document.getElementById('v1_'+num).value);
+    const v44 = parseFloat(document.getElementById('v2_'+num).value);
+    const resDiv = document.getElementById('res' + num);
+    if (v5 > 0 && v44 > 0) {
+        const tac = v5 * 500;
+        const fos = ((v44 * 2 * 1.66) - 0.15) * 500;
+        const ratio = fos / tac;
+        resDiv.innerHTML = `FOS: ${fos.toFixed(0)} | TAC: ${tac.toFixed(0)}<br><b>Ratio: ${ratio.toFixed(3)}</b>`;
+        resDiv.className = `res-auto ${ratio <= 0.3 ? 'estable' : 'alerta'}`;
+    } else {
+        resDiv.innerHTML = `FOS: -- | TAC: --<br><b>Ratio: --</b>`;
+        resDiv.className = `res-auto`;
+    }
+}
+
+async function validarYEnviar() {
+    const campos = {
+        't1':'Temp B1','ph1':'pH B1','n1':'Nivel B1','v1_1':'V5 B1','v2_1':'V4.4 B1',
+        't2':'Temp B2','ph2':'pH B2','n2':'Nivel B2','v1_2':'V5 B2','v2_2':'V4.4 B2',
+        'nHidro':'Nivel Hidro','kwh':'kWh Motor'
+    };
+    for (let id in campos) {
+        if (!document.getElementById(id).value) {
+            alert("Falta: " + campos[id]);
+            return;
+        }
+    }
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.innerText = "ENVIANDO...";
+
+    // Link de Google Apps Script (PEGALO ACÁ ABAJO)
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwAW3JbN582U8gqnDq9sXuL5IZ6MqSjwPsaZSYOApK2Pohi-c7G3RMpPoB9JSq55AfJ/exec";
+
+    const getRes = (n) => {
+        const v5 = parseFloat(document.getElementById('v1_'+n).value);
+        const v44 = parseFloat(document.getElementById('v2_'+n).value);
+        const tac = v5 * 500;
+        const fos = ((v44 * 2 * 1.66) - 0.15) * 500;
+        return {f:fos.toFixed(0), t:tac.toFixed(0), r:(fos/tac).toFixed(3)};
+    };
+
+    const r1 = getRes(1); const r2 = getRes(2);
+
+    const datos = {
+        tipoAccion: "CONTROL_DIARIO", // <--- AGREGÁ ESTA LÍNEA EXACTAMENTE ASÍ
+	nHidro: document.getElementById('nHidro').value,
+        kwh: document.getElementById('kwh').value,
+        obs: document.getElementById('obs').value,
+        t1: document.getElementById('t1').value, ph1: document.getElementById('ph1').value, n1: document.getElementById('n1').value, e1: document.getElementById('e1').value,
+        fos1: r1.f, tac1: r1.t, ratio1: r1.r,
+        t2: document.getElementById('t2').value, ph2: document.getElementById('ph2').value, n2: document.getElementById('n2').value, e2: document.getElementById('e2').value,
+        fos2: r2.f, tac2: r2.t, ratio2: r2.r
+    };
+
+    try {
+        await fetch(URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
+        alert("✅ Datos guardados. ¡Hacé la captura ahora!");
+    } catch (e) {
+        alert("❌ Error de conexión.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "ENVIAR DATOS";
+    }
+}
+</script>
+</body>
+</html>
