@@ -11,20 +11,17 @@
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); margin-bottom: 8px; padding-bottom: 2px; }
         #liveClock { font-weight: bold; color: var(--accent); font-size: 0.85rem; }
         h2 { font-size: 0.95rem; margin: 0; color: var(--primary); text-transform: uppercase; }
-        
         .section-title { background: var(--primary); color: white; padding: 3px 8px; font-size: 0.75rem; border-radius: 4px; margin: 8px 0 5px 0; font-weight: bold; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .input-group { margin-bottom: 5px; }
         label { display: block; font-size: 0.7rem; color: #666; margin-bottom: 1px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; }
-        
-        /* Estilos de los resultados de cálculo */
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; }
         .res-box { font-size: 0.75rem; padding: 5px; border-radius: 4px; margin-top: 5px; text-align: center; font-weight: bold; background: #f8f9fa; border: 1px solid #eee; }
         .optimal { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
         .alert { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-        
         textarea { height: 50px; resize: none; }
         .btn-enviar { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .btn-enviar:active { transform: scale(0.98); background: #219150; }
     </style>
 </head>
 <body>
@@ -33,12 +30,10 @@
         <h2>Control Diario Planta</h2>
         <div id="liveClock">00:00:00</div>
     </div>
-
     <div class="grid">
         <div class="input-group"><label>Nivel Hidro (m)</label><input type="number" id="nHidro" step="0.01"></div>
         <div class="input-group"><label>kWh Motor</label><input type="number" id="kwh"></div>
     </div>
-
     <div class="section-title">BIODIGESTOR 1</div>
     <div class="grid">
         <div class="input-group"><label>Temp (°C)</label><input type="number" id="t1" step="0.1"></div>
@@ -51,7 +46,6 @@
         <div class="input-group"><label>V2 (4.4)</label><input type="number" id="v2_1" step="0.1" oninput="calcular(1)"></div>
     </div>
     <div id="res1" class="res-box">Esperando datos Bio 1...</div>
-
     <div class="section-title">BIODIGESTOR 2</div>
     <div class="grid">
         <div class="input-group"><label>Temp (°C)</label><input type="number" id="t2" step="0.1"></div>
@@ -64,82 +58,32 @@
         <div class="input-group"><label>V2 (4.4)</label><input type="number" id="v2_2" step="0.1" oninput="calcular(2)"></div>
     </div>
     <div id="res2" class="res-box">Esperando datos Bio 2...</div>
-
     <div class="section-title">OBSERVACIONES</div>
     <textarea id="obs"></textarea>
-
     <button class="btn-enviar" onclick="enviar()">ENVIAR REPORTE</button>
 </div>
-
 <script>
+    // URL DE TU SCRIPT ACTUALIZADO
     const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec";
 
     function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleTimeString(); }
     setInterval(updateClock, 1000);
 
     function calcular(n) {
-        const v1 = parseFloat(document.getElementById('v1_'+n).value) || 0;
-        const v2 = parseFloat(document.getElementById('v2_'+n).value) || 0;
+        const v5 = parseFloat(document.getElementById('v1_'+n).value) || 0;
+        const v44 = parseFloat(document.getElementById('v2_'+n).value) || 0;
         const resDiv = document.getElementById('res'+n);
-
-        if (v1 > 0 && v2 > 0) {
-            const tac = v1 * 500;
-            const fos = ((v2 * 2 * 1.66) - 0.15) * 500;
-            const ratio = (fos / tac).toFixed(3);
-
-            // Lógica de colores según rango óptimo (0.2 a 0.4 aprox)
+        if (v5 > 0 && v44 > 0) {
+            const tac = v5 * 500;
+            const fos = ((v44 * 2 * 1.66) - 0.15) * 500;
+            const ratio = (fos/tac).toFixed(3);
             const isOptimal = ratio >= 0.2 && ratio <= 0.45;
             resDiv.className = isOptimal ? "res-box optimal" : "res-box alert";
             resDiv.innerHTML = `FOS: ${fos.toFixed(0)} | TAC: ${tac.toFixed(0)} | Ratio: ${ratio}`;
-            return { f: fos.toFixed(0), t: tac.toFixed(0), r: ratio };
+            return {f:fos.toFixed(0), t:tac.toFixed(0), r:ratio};
         } else {
             resDiv.className = "res-box";
             resDiv.innerHTML = `Esperando datos Bio ${n}...`;
-            return { f: 0, t: 0, r: 0 };
+            return {f:0, t:0, r:0};
         }
     }
-
-    async function enviar() {
-        const r1 = calcular(1);
-        const r2 = calcular(2);
-
-        const datos = {
-            tipoAccion: "CONTROL_DIARIO",
-            nHidro: document.getElementById('nHidro').value,
-            kwh: document.getElementById('kwh').value,
-            t1: document.getElementById('t1').value, 
-            ph1: document.getElementById('ph1').value,
-            n1: document.getElementById('n1').value, 
-            e1: document.getElementById('e1').value,
-            fos1: r1.f, tac1: r1.t, ratio1: r1.r,
-            t2: document.getElementById('t2').value, 
-            ph2: document.getElementById('ph2').value,
-            n2: document.getElementById('n2').value, 
-            e2: document.getElementById('e2').value,
-            fos2: r2.f, tac2: r2.t, ratio2: r2.r,
-            obs: document.getElementById('obs').value
-        };
-
-        if (!datos.nHidro || !datos.kwh) {
-            alert("⚠️ Completa Nivel Hidro y kWh.");
-            return;
-        }
-
-        if (!confirm("¿Desea enviar el reporte diario?")) return;
-
-        try {
-            // Enviamos como POST con no-cors para evitar bloqueos
-            await fetch(URL_SCRIPT, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify(datos)
-            });
-            alert("✅ Reporte enviado con éxito.");
-            location.reload();
-        } catch (e) {
-            alert("❌ Error al enviar.");
-        }
-    }
-</script>
-</body>
-</html>
