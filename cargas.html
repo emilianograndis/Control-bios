@@ -1,45 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cargas Alimentos Magros</title>
-    <style>
-        :root { --primary: #1b5e20; --success: #2e7d32; --error: #d32f2f; --bg: #f4f4f4; --mucanga-bg: rgba(121, 85, 72, 0.1); --suero-bg: rgba(52, 152, 219, 0.1); --trasbase-bg: #fff3e0; --trasbase-text: #e65100; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 5px; }
-        .header-main { background: var(--primary); color: white; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 8px; }
-        .header-main h1 { margin: 0; font-size: 0.95rem; text-transform: uppercase; }
-        .tabs-container { display: flex; gap: 5px; overflow-x: auto; padding: 5px 0; margin-bottom: 5px; }
-        .tab-btn { padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; background: white; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #666; flex-shrink: 0; }
-        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .btn-update { width: 100%; padding: 12px; background: #ffffff; color: var(--primary); border: 2px solid var(--primary); border-radius: 6px; font-weight: bold; cursor: pointer; display: block; font-size: 0.85rem; margin-bottom: 10px;}
-        .historial-area { background: #e0e0e0; border-radius: 6px; padding: 6px; margin-bottom: 10px; border: 1px solid #ccc; }
-        .historial-title { font-size: 0.65rem; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #bbb; }
-        .item-historial { font-size: 0.7rem; padding: 6px 0; border-bottom: 1px solid #dcdcdc; line-height: 1.3; }
-        .item-historial b { color: #1b5e20; }
-        .card { background: white; border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .bio-group { border: 1px solid #ccc; border-radius: 6px; padding: 8px; margin-bottom: 10px; background: #fff; }
-        .bio-title { font-size: 0.7rem; font-weight: bold; color: var(--primary); margin-bottom: 6px; border-bottom: 1px solid #eee; }
-        .fila-input { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 4px; padding: 6px; border-radius: 4px; border: 1px solid #eee; }
-        .bg-mucanga { background-color: var(--mucanga-bg); }
-        .bg-suero { background-color: var(--suero-bg); }
-        .obj-box { font-size: 0.75rem; border-right: 1px solid #ddd; line-height: 1.2; }
-        .obj-box span { font-size: 0.6rem; color: #555; font-weight: bold; }
-        .obj-val { font-size: 0.9rem; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1.5px solid #ccc; border-radius: 4px; font-size: 0.95rem; text-align: center; font-weight: bold; box-sizing: border-box; }
-        .match { background-color: #c8e6c9 !important; border-color: var(--success) !important; }
-        .mismatch { background-color: #ffcdd2 !important; border-color: var(--error) !important; }
-        .st-container { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 6px; border: 1px solid #ccc; }
-        .btn-enviar { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; margin-top: 8px; }
-    </style>
-</head>
-<body>
-    <div class="header-main"><h1>Cargas Diarias Biogás</h1></div>
-    <div class="historial-area"><div class="historial-title">Cargas completadas hoy:</div><div id="listaHistorial"></div></div>
-    <button type="button" class="btn-update" id="btnLeer" onclick="consultarPlan()">🔄 ACTUALIZAR PLANILLA</button>
-    <div id="tabsTareas" class="tabs-container"></div>
-    <div id="contenedorActivo"></div>
-
 <script>
     const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec"; 
     let pendientesGlobal = [];
@@ -49,7 +7,7 @@
 
     async function consultarPlan() {
         try {
-            const res = await fetch(URL_SCRIPT);
+            const res = await fetch(URL_SCRIPT + "?action=getPlanilla");
             const cargas = await res.json();
             document.getElementById('listaHistorial').innerHTML = "";
             document.getElementById('tabsTareas').innerHTML = "";
