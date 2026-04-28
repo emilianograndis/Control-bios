@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Alimentos Magros</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #1b5e20; --accent: #1565c0; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .header { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { font-size: 1rem; color: #333; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .kpi-container { display: flex; justify-content: space-around; margin-bottom: 20px; }
+        .kpi-card { background: white; padding: 20px; border-radius: 10px; text-align: center; flex: 1; margin: 0 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .kpi-value { display: block; font-size: 1.8rem; font-weight: bold; color: var(--accent); }
+        .kpi-label { font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        .loading { text-align: center; padding: 50px; font-weight: bold; color: #666; }
+        .btn-back { display: inline-block; margin-bottom: 15px; text-decoration: none; color: var(--primary); font-weight: bold; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="btn-back">← Volver al Menú</a>
+    
+    <div class="header">
+        <h1>Control Operativo de Biodigestores</h1>
+    </div>
+
+    <div id="loader" class="loading">Cargando datos en tiempo real...</div>
+
+    <div id="dashboardContent" style="display:none;">
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <span class="kpi-label">Generación Mensual</span>
+                <span id="kwhMensual" class="kpi-value">0</span>
+                <span class="kpi-label">kWh</span>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="card">
+                <h2>Estabilidad Biológica (Ratio FOS/TAC)</h2>
+                <canvas id="chartFosTac"></canvas>
+            </div>
+
+            <div class="card">
+                <h2>Temperaturas de Proceso (°C)</h2>
+                <canvas id="chartTemp"></canvas>
+            </div>
+
+            <div class="card">
+                <h2>Carga Orgánica Diaria (OLR)</h2>
+                <canvas id="chartOlr"></canvas>
+            </div>
+
+            <div class="card">
+                <h2>Generación Eléctrica Diaria (kWh)</h2>
+                <canvas id="chartEnergia"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec";
+
+        async function cargarDatos() {
+            try {
+                const response = await fetch(URL_SCRIPT + "?action=getDashboard");
+                const data = await response.json();
+                
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+
+                actualizarKPIs(data);
+                renderCharts(data);
+            } catch (error) {
+                document.getElementById('loader').innerText = "Error al conectar con los datos.";
+                console.error(error);
+            }
+        }
+
+        function actualizarKPIs(data) {
+            document.getElementById('kwhMensual').innerText = Math.round(data.energia.mensualAcumulada).toLocaleString();
+        }
+
+        function renderCharts(data) {
+            const fechasBio = data.biologico.map(d => d.fecha);
+            const fechasCargas = Object.keys(data.cargasDiarias);
+            const dataCargas = Object.values(data.cargasDiarias);
+
+            // 1. Gráfico FOS/TAC
+            new Chart(document.getElementById('chartFosTac'), {
+                type: 'line',
+                data: {
+                    labels: fechasBio,
+                    datasets: [
+                        { label: 'Bio 1', data: data.biologico.map(d => d.ratio1), borderColor: '#2e7d32', tension: 0.3 },
+                        { label: 'Bio 2', data: data.biologico.map(d => d.ratio2), borderColor: '#1565c0', tension: 0.3 }
+                    ]
+                }
+            });
+
+            // 2. Gráfico Temperaturas
+            new Chart(document.getElementById('chartTemp'), {
+                type: 'line',
+                data: {
+                    labels: fechasBio,
+                    datasets: [
+                        { label: 'Temp B1', data: data.biologico.map(d => d.t1), borderColor: '#f44336' },
+                        { label: 'Temp B2', data: data.biologico.map(d => d.t2), borderColor: '#ff9800' }
+                    ]
+                }
+            });
+
+            // 3. Gráfico OLR (Barras Apiladas)
+            new Chart(document.getElementById('chartOlr'), {
+                type: 'bar',
+                data: {
+                    labels: fechasCargas,
+                    datasets: [
+                        { label: 'OLR B1', data: dataCargas.map(d => d.olr1), backgroundColor: '#81c784' },
+                        { label: 'OLR B2', data: dataCargas.map(d => d.olr2), backgroundColor: '#64b5f6' }
+                    ]
+                }
+            });
+
+            // 4. Gráfico Energía
+            new Chart(document.getElementById('chartEnergia'), {
+                type: 'bar',
+                data: {
+                    labels: data.energia.diaria.map(d => d.fecha),
+                    datasets: [{
+                        label: 'kWh Generados',
+                        data: data.energia.diaria.map(d => d.valor),
+                        backgroundColor: '#fb8c00'
+                    }]
+                }
+            });
+        }
+
+        window.onload = cargarDatos;
+    </script>
+</body>
+</html>
