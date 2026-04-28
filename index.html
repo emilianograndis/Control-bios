@@ -2,91 +2,52 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión Planta Biodigestores</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Menú Biodigestores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {
-            box-sizing: border-box;
+        :root {
+            --primary: #1b5e20;
+            --secondary: #27ae60;
+            --accent: #1565c0;
+            --bg: #f4f7f6;
         }
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: Arial, sans-serif; 
             text-align: center; 
-            padding: 15px; 
-            /* Fondo verdecito suave degradado */
-            background: linear-gradient(180deg, #e8f5e9 0%, #f0f4f3 100%); 
-            color: #2c3e50;
+            padding: 20px; 
+            background: var(--bg); 
             margin: 0;
-            min-height: 100vh;
         }
-        .logo {
-            max-width: 180px; /* Tamaño controlado del logo */
-            margin: 20px auto;
-            display: block;
-        }
-        h1 { 
-            margin: 10px 0 25px 0; 
-            color: #1a5c2e; 
-            font-size: 20px; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .contenedor-botones { 
-            width: 100%;
-            max-width: 320px; 
-            margin: 0 auto; 
-        }
+        h1 { color: var(--primary); margin-bottom: 30px; }
+        .container { max-width: 400px; margin: 0 auto; }
         .boton { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+            display: block; 
             width: 100%; 
-            padding: 18px 10px; 
+            padding: 20px; 
             margin: 15px 0; 
-            background: #ffffff; 
-            color: #1a5c2e; 
+            background: var(--secondary); 
+            color: white; 
             text-decoration: none; 
             border-radius: 12px; 
             font-weight: bold; 
-            font-size: 16px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-            border: 1.5px solid #27ae60;
-            transition: all 0.2s;
+            font-size: 18px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            box-sizing: border-box;
         }
-        .boton:active { 
-            transform: scale(0.96); 
-            background: #f1f8e9; 
-        }
-        .icono { 
-            font-size: 20px; 
-            margin-right: 12px; 
-        }
-        .footer {
-            margin-top: 40px; 
-            font-size: 13px; 
-            color: #1a5c2e;
-            font-weight: 500;
-        }
+        .boton:active { transform: scale(0.98); }
+        .boton-dash { background: var(--accent); } /* Color diferente para el Dashboard */
     </style>
 </head>
 <body>
-    <img src="https://alimentosmagros.com.ar/wp-content/uploads/2021/04/logo-alimentos-magros.png" alt="Alimentos Magros" class="logo">
-    
-    <h1>Gestión de Planta</h1>
-    
-    <div class="contenedor-botones">
-        <a href="diario.html" class="boton">
-            <span class="icono">📝</span> 
-            <span>Registro Diario</span>
-        </a>
-
-        <a href="cargas.html" class="boton">
-            <span class="icono">⚙️</span> 
-            <span>Cargas a Biodigestores</span>
-        </a>
-    </div>
-
-    <div class="footer">
-        Alimentos Magros S.A.
+    <div class="container">
+        <h1>Gestión Planta</h1>
+        
+        <a href="Dashboard.html" class="boton boton-dash">📊 Dashboard Tiempo Real</a>
+        
+        <a href="cargas.html" class="boton">🚜 Cargas a Biodigestores</a>
+        
+        <a href="diario.html" class="boton">📝 Registro Diario (Química)</a>
     </div>
 </body>
 </html>
