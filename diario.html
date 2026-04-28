@@ -63,7 +63,7 @@
     <button class="btn-enviar" onclick="enviar()">ENVIAR REPORTE</button>
 </div>
 <script>
-    // URL DE TU SCRIPT ACTUALIZADO
+    // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
     const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec";
 
     function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleTimeString(); }
@@ -87,3 +87,28 @@
             return {f:0, t:0, r:0};
         }
     }
+
+    async function enviar() {
+        const r1 = calcular(1);
+        const r2 = calcular(2);
+        const datos = {
+            tipoAccion: "CONTROL_DIARIO",
+            nHidro: document.getElementById('nHidro').value,
+            kwh: document.getElementById('kwh').value,
+            obs: document.getElementById('obs').value,
+            t1: document.getElementById('t1').value, ph1: document.getElementById('ph1').value, n1: document.getElementById('n1').value, e1: document.getElementById('e1').value,
+            fos1: r1.f, tac1: r1.t, ratio1: r1.r,
+            t2: document.getElementById('t2').value, ph2: document.getElementById('ph2').value, n2: document.getElementById('n2').value, e2: document.getElementById('e2').value,
+            fos2: r2.f, tac2: r2.t, ratio2: r2.r
+        };
+        if (!datos.nHidro || !datos.kwh) { alert("⚠️ Completa Hidro y kWh"); return; }
+        if (!confirm("¿Desea enviar el reporte diario?")) return;
+        try {
+            await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(datos) });
+            alert("✅ Reporte enviado con éxito.");
+            location.reload();
+        } catch (e) { alert("❌ Error al enviar"); }
+    }
+</script>
+</body>
+</html>
