@@ -8,22 +8,16 @@
     <style>
         :root { --primary: #1b5e20; --bg: #f4f7f6; --text: #333; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        
-        /* Estilo delicado tipo Registro Diario */
         .header-main { background: var(--primary); color: white; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; }
         .header-main h1 { margin: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
-        
         .btn-back { display: inline-block; margin-bottom: 10px; text-decoration: none; color: var(--primary); font-size: 0.85rem; font-weight: bold; }
-        
         .kpi-container { display: flex; justify-content: center; margin-bottom: 15px; }
         .kpi-card { background: white; padding: 15px; border-radius: 8px; text-align: center; width: 100%; max-width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; }
         .kpi-label { font-size: 0.75rem; color: #666; text-transform: uppercase; font-weight: bold; }
         .kpi-value { display: block; font-size: 1.6rem; font-weight: bold; color: var(--primary); margin: 5px 0; }
-        
         .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
         .card { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; }
         h2 { font-size: 0.85rem; color: var(--primary); margin: 0 0 10px 0; text-transform: uppercase; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
-        
         .loading { text-align: center; padding: 40px; color: #666; font-size: 0.9rem; }
         canvas { max-height: 220px; }
     </style>
@@ -36,7 +30,7 @@
         <h1>Control de Planta</h1>
     </div>
 
-    <div id="loader" class="loading">Sincronizando datos...</div>
+    <div id="loader" class="loading">Sincronizando datos en tiempo real...</div>
 
     <div id="dashboardContent" style="display:none;">
         <div class="kpi-container">
@@ -76,39 +70,42 @@
     </div>
 
     <script>
-        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwAW3JbN582U8gqnDq9sXuL5IZ6MqSjwPsaZSYOApK2Pohi-c7G3RMpPoB9JSq55AfJ/exec";
+        // REEMPLAZA CON TU URL ACTUAL DE IMPLEMENTACIÓN
+        const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec";
 
         async function cargarDatos() {
             try {
                 const response = await fetch(URL_SCRIPT + "?action=getDashboard");
+                if (!response.ok) throw new Error("Error en respuesta");
                 const data = await response.json();
+                
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('dashboardContent').style.display = 'block';
                 actualizarDashboard(data);
             } catch (error) {
-                document.getElementById('loader').innerText = "Error de conexión.";
+                document.getElementById('loader').innerText = "Error: No se pudieron cargar los datos. Verifica la URL del Script.";
+                console.error(error);
             }
         }
 
         function actualizarDashboard(data) {
-            // Actualizar KPI con mes actual
-            document.getElementById('labelMes').innerText = "GENERACIÓN MENSUAL " + data.etiquetaMes;
-            document.getElementById('kwhMensual').innerText = Math.round(data.energia.mensualAcumulada).toLocaleString();
+            document.getElementById('labelMes').innerText = "GENERACIÓN MENSUAL " + (data.etiquetaMes || "");
+            document.getElementById('kwhMensual').innerText = Math.round(data.energia.mensualAcumulada || 0).toLocaleString();
 
             const commonOptions = { responsive: true, plugins: { legend: { labels: { boxWidth: 12, font: { size: 10 } } } } };
 
-            // 1. Nivel Hidrolizador (Últimos 10 días)
-            const ultimosHidro = data.biologico.slice(-10);
+            // 1. Hidrolizador (Últimos 10)
+            const dHidro = data.biologico.slice(-10);
             new Chart(document.getElementById('chartHidro'), {
                 type: 'line',
                 data: {
-                    labels: ultimosHidro.map(d => d.fecha),
-                    datasets: [{ label: 'Nivel', data: ultimosHidro.map(d => d.nHidro), borderColor: '#795548', backgroundColor: '#79554822', fill: true, tension: 0.3 }]
+                    labels: dHidro.map(d => d.fecha),
+                    datasets: [{ label: 'Nivel', data: dHidro.map(d => d.nHidro), borderColor: '#795548', backgroundColor: '#79554822', fill: true, tension: 0.3 }]
                 },
                 options: commonOptions
             });
 
-            // 2. OLR (Últimos 10 días)
+            // 2. OLR (Últimos 10)
             const fechasOLR = Object.keys(data.cargasDiarias).slice(-10);
             new Chart(document.getElementById('chartOlr'), {
                 type: 'bar',
@@ -122,7 +119,7 @@
                 options: { ...commonOptions, scales: { x: { stacked: true }, y: { stacked: true } } }
             });
 
-            // 3. FOS/TAC (Completo)
+            // 3. FOS/TAC
             new Chart(document.getElementById('chartFosTac'), {
                 type: 'line',
                 data: {
@@ -135,7 +132,7 @@
                 options: commonOptions
             });
 
-            // 4. Temperaturas (Completo)
+            // 4. Temperaturas
             new Chart(document.getElementById('chartTemp'), {
                 type: 'line',
                 data: {
@@ -148,7 +145,7 @@
                 options: commonOptions
             });
 
-            // 5. Energía Diaria
+            // 5. Energía
             new Chart(document.getElementById('chartEnergia'), {
                 type: 'bar',
                 data: {
