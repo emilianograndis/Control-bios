@@ -5,111 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cargas Alimentos Magros</title>
     <style>
-        :root { --primary: #1b5e20; --success: #2e7d32; --error: #d32f2f; --bg: #f4f4f4; --mucanga-bg: rgba(121, 85, 72, 0.1); --suero-bg: rgba(52, 152, 219, 0.1); --trasbase-bg: #fff3e0; --trasbase-text: #e65100; }
+        :root { --primary: #1b5e20; --success: #2e7d32; --bg: #f4f4f4; --mucanga-bg: rgba(121, 85, 72, 0.1); --suero-bg: rgba(52, 152, 219, 0.1); }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 5px; }
         .header-main { background: var(--primary); color: white; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 8px; }
         .header-main h1 { margin: 0; font-size: 0.95rem; text-transform: uppercase; }
-        .tabs-container { display: flex; gap: 5px; overflow-x: auto; padding: 5px 0; margin-bottom: 5px; }
-        .tab-btn { padding: 8px 15px; border-radius: 20px; border: none; background: white; white-space: nowrap; font-size: 0.85rem; font-weight: bold; color: #666; cursor: pointer; }
+        .tabs-container { display: flex; gap: 5px; overflow-x: auto; padding: 5px 0; }
+        .tab-btn { padding: 8px 15px; border-radius: 20px; border: none; background: white; white-space: nowrap; font-size: 0.85rem; font-weight: bold; color: #666; }
         .tab-btn.active { background: var(--primary); color: white; }
         .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.8rem; color: #555; margin-bottom: 4px; font-weight: bold; }
+        .input-group { margin-bottom: 10px; }
+        label { display: block; font-size: 0.8rem; color: #555; font-weight: bold; margin-bottom: 3px; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        .btn-enviar { width: 100%; padding: 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+        .btn-enviar { width: 100%; padding: 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: bold; font-size: 1rem; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="header-main"><h1>CARGAS PENDIENTES</h1></div>
     <div id="tabs" class="tabs-container"></div>
-    <div id="contenedorActivo" class="card">Cargando planilla...</div>
+    <div id="contenedorActivo" class="card">Cargando...</div>
 
     <script>
-        // PEGA TU URL DE IMPLEMENTACIÓN AQUÍ ABAJO:
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec";
-
         let pendientesGlobal = [];
         let indiceSeleccionado = 0;
 
-        // ESTA ES LA FUNCIÓN DEL PUNTO 3 CORREGIDA
         async function consultarPlan() {
             try {
-                // Se agrega ?action=getPlanilla para que el script sepa qué responder
-                const res = await fetch(URL_SCRIPT + "?action=getPlanilla"); 
+                const res = await fetch(URL_SCRIPT + "?action=getPlanilla");
                 pendientesGlobal = await res.json();
-                if (pendientesGlobal.length > 0) {
-                    renderTabs();
-                } else {
-                    document.getElementById('contenedorActivo').innerHTML = "✅ No hay cargas pendientes.";
-                }
-            } catch (e) {
-                document.getElementById('contenedorActivo').innerHTML = "❌ Error al conectar con el servidor.";
-            }
+                renderTabs();
+            } catch (e) { document.getElementById('contenedorActivo').innerHTML = "Error"; }
         }
 
         function renderTabs() {
             let html = "";
             pendientesGlobal.forEach((p, i) => {
-                const isActive = i === indiceSeleccionado ? 'active' : '';
-                html += `<button class="tab-btn ${isActive}" onclick="seleccionar(${i})">${p.id}</button>`;
+                html += `<button class="tab-btn ${i===indiceSeleccionado?'active':''}" onclick="seleccionar(${i})">${p.id}</button>`;
             });
             document.getElementById('tabs').innerHTML = html;
             renderForm();
         }
 
-        function seleccionar(i) {
-            indiceSeleccionado = i;
-            renderTabs();
-        }
+        function seleccionar(i) { indiceSeleccionado = i; renderTabs(); }
 
         function renderForm() {
             const c = pendientesGlobal[indiceSeleccionado];
             const isT = c.id.toUpperCase().includes("TRASBASE");
-            
             let html = `<h3>${c.id}</h3>`;
-            if (!isT) {
+            if(!isT) {
                 html += `
-                <div class="input-group"><label>R1 MUCA (kg)</label><input type="number" id="r1m"></div>
-                <div class="input-group"><label>R1 SUERO (kg)</label><input type="number" id="r1s"></div>
-                <div class="input-group"><label>R2 MUCA (kg)</label><input type="number" id="r2m"></div>
-                <div class="input-group"><label>R2 SUERO (kg)</label><input type="number" id="r2s"></div>
+                <div class="input-group" style="background:var(--mucanga-bg);padding:10px;border-radius:6px">
+                    <label>R1 MUCA (kg)</label><input type="number" id="r1m">
+                    <label>R2 MUCA (kg)</label><input type="number" id="r2m">
+                </div>
+                <div class="input-group" style="background:var(--suero-bg);padding:10px;border-radius:6px;margin-top:10px">
+                    <label>R1 SUERO (kg)</label><input type="number" id="r1s">
+                    <label>R2 SUERO (kg)</label><input type="number" id="r2s">
+                </div>
                 <div class="input-group"><label>% ST MUCA</label><input type="number" id="stValue" step="0.1"></div>`;
-            } else {
-                html += `<p style="color:var(--trasbase-text)">Confirme el trasbase de bache.</p>`;
             }
-            
-            html += `<button class="btn-enviar" onclick="enviar()">CONFIRMAR REGISTRO</button>`;
+            html += `<button class="btn-enviar" onclick="enviar()">CONFIRMAR</button>`;
             document.getElementById('contenedorActivo').innerHTML = html;
         }
 
         async function enviar() {
             const c = pendientesGlobal[indiceSeleccionado];
-            const isT = c.id.toUpperCase().includes("TRASBASE");
-            
             let data = { tipoAccion: "REGISTRO_CARGA", bache: c.id };
-
-            if (!isT) {
-                data.r1m = document.getElementById('r1m').value;
-                data.r1s = document.getElementById('r1s').value;
-                data.r2m = document.getElementById('r2m').value;
-                data.r2s = document.getElementById('r2s').value;
+            if (!c.id.toUpperCase().includes("TRASBASE")) {
+                data.r1m = document.getElementById('r1m').value; data.r2m = document.getElementById('r2m').value;
+                data.r1s = document.getElementById('r1s').value; data.r2s = document.getElementById('r2s').value;
                 data.st = document.getElementById('stValue').value;
-                if (!data.r1m || !data.st) { alert("Complete los datos"); return; }
             }
-
-            if (!confirm("¿Desea registrar esta carga?")) return;
-
             try {
-                await fetch(URL_SCRIPT, {
-                    method: "POST",
-                    mode: "no-cors",
-                    body: JSON.stringify(data)
-                });
-                alert("✅ Registro enviado!");
-                location.reload();
-            } catch (e) { alert("❌ Error al enviar"); }
+                await fetch(URL_SCRIPT, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
+                alert("✅ Registrado"); location.reload();
+            } catch (e) { alert("❌ Error"); }
         }
-
         consultarPlan();
     </script>
 </body>
