@@ -2,137 +2,62 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Alimentos Magros</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #1b5e20; --bg: #f4f7f6; --text: #333; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: var(--text); }
-        .header-main { background: var(--primary); color: white; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; }
-        .header-main h1 { margin: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-back { display: inline-block; margin-bottom: 10px; text-decoration: none; color: var(--primary); font-size: 0.85rem; font-weight: bold; }
-        .kpi-container { display: flex; justify-content: center; margin-bottom: 15px; }
-        .kpi-card { background: white; padding: 15px; border-radius: 8px; text-align: center; width: 100%; max-width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .kpi-label { font-size: 0.75rem; color: #666; text-transform: uppercase; font-weight: bold; }
-        .kpi-value { display: block; font-size: 1.6rem; font-weight: bold; color: var(--primary); margin: 5px 0; }
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        h2 { font-size: 0.85rem; color: var(--primary); margin: 0 0 10px 0; text-transform: uppercase; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
-        .loading { text-align: center; padding: 40px; color: #666; font-size: 0.9rem; }
-        canvas { max-height: 220px; }
+        :root { --primary: #1b5e20; --bg: #f4f7f6; }
+        body { font-family: sans-serif; background: var(--bg); padding: 10px; }
+        .header { background: var(--primary); color: white; padding: 10px; border-radius: 6px; text-align: center; }
+        .chart-card { background: white; padding: 15px; border-radius: 8px; margin-top: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-
-    <a href="index.html" class="btn-back">← VOLVER AL MENÚ</a>
-    
-    <div class="header-main">
-        <h1>Control de Planta</h1>
-    </div>
-
-    <div id="loader" class="loading">Sincronizando datos en tiempo real...</div>
-
-    <div id="dashboardContent" style="display:none;">
-        <div class="kpi-container">
-            <div class="kpi-card">
-                <span id="labelMes" class="kpi-label">GENERACIÓN MENSUAL</span>
-                <span id="kwhMensual" class="kpi-value">0</span>
-                <span class="kpi-label">kWh TOTALES</span>
-            </div>
-        </div>
-
-        <div class="grid-container">
-            <div class="card">
-                <h2>Nivel Hidrolizador (Histórico 10d)</h2>
-                <canvas id="chartHidro"></canvas>
-            </div>
-            
-            <div class="card">
-                <h2>Carga Orgánica OLR (Últimos 10d)</h2>
-                <canvas id="chartOlr"></canvas>
-            </div>
-
-            <div class="card">
-                <h2>Estabilidad (Ratio FOS/TAC)</h2>
-                <canvas id="chartFosTac"></canvas>
-            </div>
-
-            <div class="card">
-                <h2>Temperaturas de Proceso (°C)</h2>
-                <canvas id="chartTemp"></canvas>
-            </div>
-
-            <div class="card">
-                <h2>Generación Eléctrica Diaria</h2>
-                <canvas id="chartEnergia"></canvas>
-            </div>
-        </div>
-    </div>
+    <div class="header"><h1>DASHBOARD PLANTA</h1></div>
+    <div class="chart-card"><canvas id="chartOlr"></canvas></div>
+    <div class="chart-card"><canvas id="chartRatios"></canvas></div>
+    <div class="chart-card"><canvas id="chartTemp"></canvas></div>
 
     <script>
-        // REEMPLAZA CON TU URL ACTUAL DE IMPLEMENTACIÓN
         const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec";
 
         async function cargarDatos() {
             try {
                 const response = await fetch(URL_SCRIPT + "?action=getDashboard");
-                if (!response.ok) throw new Error("Error en respuesta");
                 const data = await response.json();
-                
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('dashboardContent').style.display = 'block';
-                actualizarDashboard(data);
-            } catch (error) {
-                document.getElementById('loader').innerText = "Error: No se pudieron cargar los datos. Verifica la URL del Script.";
-                console.error(error);
-            }
+                renderCharts(data);
+            } catch (e) { alert("Error al cargar dashboard"); }
         }
 
-        function actualizarDashboard(data) {
-            document.getElementById('labelMes').innerText = "GENERACIÓN MENSUAL " + (data.etiquetaMes || "");
-            document.getElementById('kwhMensual').innerText = Math.round(data.energia.mensualAcumulada || 0).toLocaleString();
+        function renderCharts(data) {
+            const commonOptions = { responsive: true, plugins: { legend: { position: 'bottom' } } };
 
-            const commonOptions = { responsive: true, plugins: { legend: { labels: { boxWidth: 12, font: { size: 10 } } } } };
-
-            // 1. Hidrolizador (Últimos 10)
-            const dHidro = data.biologico.slice(-10);
-            new Chart(document.getElementById('chartHidro'), {
-                type: 'line',
+            // 1. Gráfico OLR (Cargas)
+            new Chart(document.getElementById('chartOlr'), {
+                type: 'bar',
                 data: {
-                    labels: dHidro.map(d => d.fecha),
-                    datasets: [{ label: 'Nivel', data: dHidro.map(d => d.nHidro), borderColor: '#795548', backgroundColor: '#79554822', fill: true, tension: 0.3 }]
+                    labels: data.cargas.map(d => d.fecha),
+                    datasets: [
+                        { label: 'Bio 1', data: data.cargas.map(d => d.olr1), backgroundColor: '#81c784' },
+                        { label: 'Bio 2', data: data.cargas.map(d => d.olr2), backgroundColor: '#64b5f6' }
+                    ]
                 },
                 options: commonOptions
             });
 
-            // 2. OLR (Últimos 10)
-            const fechasOLR = Object.keys(data.cargasDiarias).slice(-10);
-            new Chart(document.getElementById('chartOlr'), {
-                type: 'bar',
-                data: {
-                    labels: fechasOLR,
-                    datasets: [
-                        { label: 'Bio 1', data: fechasOLR.map(f => data.cargasDiarias[f].olr1), backgroundColor: '#81c784' },
-                        { label: 'Bio 2', data: fechasOLR.map(f => data.cargasDiarias[f].olr2), backgroundColor: '#64b5f6' }
-                    ]
-                },
-                options: { ...commonOptions, scales: { x: { stacked: true }, y: { stacked: true } } }
-            });
-
-            // 3. FOS/TAC
-            new Chart(document.getElementById('chartFosTac'), {
+            // 2. Ratios
+            new Chart(document.getElementById('chartRatios'), {
                 type: 'line',
                 data: {
                     labels: data.biologico.map(d => d.fecha),
                     datasets: [
-                        { label: 'Bio 1', data: data.biologico.map(d => d.ratio1), borderColor: '#2e7d32', tension: 0.2 },
-                        { label: 'Bio 2', data: data.biologico.map(d => d.ratio2), borderColor: '#1565c0', tension: 0.2 }
+                        { label: 'Ratio 1', data: data.biologico.map(d => d.ratio1), borderColor: '#2e7d32' },
+                        { label: 'Ratio 2', data: data.biologico.map(d => d.ratio2), borderColor: '#1565c0' }
                     ]
                 },
                 options: commonOptions
             });
 
-            // 4. Temperaturas
+            // 3. Temperaturas
             new Chart(document.getElementById('chartTemp'), {
                 type: 'line',
                 data: {
@@ -144,19 +69,8 @@
                 },
                 options: commonOptions
             });
-
-            // 5. Energía
-            new Chart(document.getElementById('chartEnergia'), {
-                type: 'bar',
-                data: {
-                    labels: data.energia.diaria.map(d => d.fecha),
-                    datasets: [{ label: 'kWh', data: data.energia.diaria.map(d => d.valor), backgroundColor: '#fb8c00' }]
-                },
-                options: commonOptions
-            });
         }
-
-        window.onload = cargarDatos;
+        cargarDatos();
     </script>
 </body>
 </html>
