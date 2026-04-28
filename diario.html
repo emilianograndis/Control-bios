@@ -48,7 +48,12 @@
             <div class="input-row">
                 <div class="input-group"><label>Nivel (m)</label><input type="number" id="n1" step="0.01"></div>
                 <div class="input-group"><label>Espuma</label>
-                    <select id="e1"><option>Nada</option><option>Baja</option><option>Alta</option></select>
+                    <select id="e1">
+                        <option>Nada</option>
+                        <option>Baja</option>
+                        <option>Media</option>
+                        <option>Alta</option>
+                    </select>
                 </div>
             </div>
             <div class="input-row">
@@ -67,7 +72,12 @@
             <div class="input-row">
                 <div class="input-group"><label>Nivel (m)</label><input type="number" id="n2" step="0.01"></div>
                 <div class="input-group"><label>Espuma</label>
-                    <select id="e2"><option>Nada</option><option>Baja</option><option>Alta</option></select>
+                    <select id="e2">
+                        <option>Nada</option>
+                        <option>Baja</option>
+                        <option>Media</option>
+                        <option>Alta</option>
+                    </select>
                 </div>
             </div>
             <div class="input-row">
@@ -127,11 +137,9 @@ async function validarYEnviar() {
         't2':'Temp B2','ph2':'pH B2','n2':'Nivel B2','v1_2':'V5 B2','v2_2':'V4.4 B2',
         'nHidro':'Nivel Hidro','kwh':'kWh Motor'
     };
-
-    // Validación de campos vacíos
     for (let id in campos) {
         if (!document.getElementById(id).value) {
-            alert("Falta completar: " + campos[id]);
+            alert("Falta: " + campos[id]);
             return;
         }
     }
@@ -140,7 +148,6 @@ async function validarYEnviar() {
     btn.disabled = true;
     btn.innerText = "ENVIANDO...";
 
-    // URL de tu Script de Google Apps Script
     const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxD01-bsRa4emtZfNjjIEUB_eCfNdWQZ_2qXtLuVZdkBgK8P8jHw_1XwTTAAsjOhjHP/exec";
 
     const getRes = (n) => {
@@ -151,44 +158,29 @@ async function validarYEnviar() {
         return {f:fos.toFixed(0), t:tac.toFixed(0), r:(fos/tac).toFixed(3)};
     };
 
-    const r1 = getRes(1); 
-    const r2 = getRes(2);
+    const r1 = getRes(1); const r2 = getRes(2);
 
     const datos = {
         tipoAccion: "CONTROL_DIARIO",
         nHidro: document.getElementById('nHidro').value,
         kwh: document.getElementById('kwh').value,
         obs: document.getElementById('obs').value,
-        t1: document.getElementById('t1').value, 
-        ph1: document.getElementById('ph1').value, 
-        n1: document.getElementById('n1').value, 
-        e1: document.getElementById('e1').value,
-        fos1: r1.f, 
-        tac1: r1.t, 
-        ratio1: r1.r,
-        t2: document.getElementById('t2').value, 
-        ph2: document.getElementById('ph2').value, 
-        n2: document.getElementById('n2').value, 
-        e2: document.getElementById('e2').value,
-        fos2: r2.f, 
-        tac2: r2.t, 
-        ratio2: r2.r
+        t1: document.getElementById('t1').value, ph1: document.getElementById('ph1').value, n1: document.getElementById('n1').value, e1: document.getElementById('e1').value,
+        fos1: r1.f, tac1: r1.t, ratio1: r1.r,
+        t2: document.getElementById('t2').value, ph2: document.getElementById('ph2').value, n2: document.getElementById('n2').value, e2: document.getElementById('e2').value,
+        fos2: r2.f, tac2: r2.t, ratio2: r2.r
     };
 
     try {
-        // Se utiliza el parámetro text/plain para evitar problemas de CORS en preflight
-        await fetch(URL_SCRIPT, {
-            method: 'POST',
+        await fetch(URL_SCRIPT, { 
+            method: 'POST', 
             mode: 'no-cors', 
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(datos)
+            body: JSON.stringify(datos) 
         });
-        
-        // Dado que no-cors no permite ver la respuesta, asumimos éxito si no hay excepción
-        alert("✅ Datos enviados correctamente a la planilla.");
+        alert("✅ Datos guardados. ¡Hacé la captura ahora!");
     } catch (e) {
-        console.error(e);
-        alert("❌ Error al conectar con el servidor.");
+        alert("❌ Error de conexión.");
     } finally {
         btn.disabled = false;
         btn.innerText = "ENVIAR DATOS";
