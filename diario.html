@@ -21,8 +21,12 @@
         input, select, textarea { width: 100%; padding: 6px; border: 1px solid #aaa; border-radius: 3px; font-size: 0.9rem; box-sizing: border-box; background: #fff; }
         textarea { resize: none; font-family: inherit; }
         .res-auto { margin-top: 5px; padding: 5px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #ccc; line-height: 1.3; background: #eee; min-height: 32px; }
-        .estable { background: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .alerta { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        
+        /* Colores de estado */
+        .estable { background: #d4edda; color: #155724; border-color: #c3e6cb; } /* Verde */
+        .precaucion { background: #fff3cd; color: #856404; border-color: #ffeeba; } /* Amarillo */
+        .alerta { background: #f8d7da; color: #721c24; border-color: #f5c6cb; } /* Rojo */
+
         .general-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f0f4f7; padding: 8px; border-radius: 5px; border: 1px solid #d1d8dd; }
         .full-width { grid-column: span 2; }
         button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
@@ -109,12 +113,23 @@ function calc(num) {
     const v5 = parseFloat(document.getElementById('v1_'+num).value);
     const v44 = parseFloat(document.getElementById('v2_'+num).value);
     const resDiv = document.getElementById('res' + num);
+    
     if (v5 > 0 && v44 > 0) {
         const tac = v5 * 500;
         const fos = ((v44 * 2 * 1.66) - 0.15) * 500;
         const ratio = fos / tac;
+        
+        let estadoClase = '';
+        if (ratio < 0.3) {
+            estadoClase = 'estable'; // Verde
+        } else if (ratio <= 0.4) {
+            estadoClase = 'precaucion'; // Amarillo
+        } else {
+            estadoClase = 'alerta'; // Rojo
+        }
+
         resDiv.innerHTML = `FOS: ${fos.toFixed(0)} | TAC: ${tac.toFixed(0)}<br><b>Ratio: ${ratio.toFixed(3)}</b>`;
-        resDiv.className = `res-auto ${ratio <= 0.3 ? 'estable' : 'alerta'}`;
+        resDiv.className = `res-auto ${estadoClase}`;
     } else {
         resDiv.innerHTML = `FOS: -- | TAC: --<br><b>Ratio: --</b>`;
         resDiv.className = `res-auto`;
@@ -138,7 +153,6 @@ async function validarYEnviar() {
     btn.disabled = true;
     btn.innerText = "ENVIANDO...";
 
-    // Link de Google Apps Script (PEGALO ACÁ ABAJO)
     const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwAW3JbN582U8gqnDq9sXuL5IZ6MqSjwPsaZSYOApK2Pohi-c7G3RMpPoB9JSq55AfJ/exec";
 
     const getRes = (n) => {
@@ -152,8 +166,8 @@ async function validarYEnviar() {
     const r1 = getRes(1); const r2 = getRes(2);
 
     const datos = {
-        tipoAccion: "CONTROL_DIARIO", // <--- AGREGÁ ESTA LÍNEA EXACTAMENTE ASÍ
-	nHidro: document.getElementById('nHidro').value,
+        tipoAccion: "CONTROL_DIARIO",
+        nHidro: document.getElementById('nHidro').value,
         kwh: document.getElementById('kwh').value,
         obs: document.getElementById('obs').value,
         t1: document.getElementById('t1').value, ph1: document.getElementById('ph1').value, n1: document.getElementById('n1').value, e1: document.getElementById('e1').value,
